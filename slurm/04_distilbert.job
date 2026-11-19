@@ -1,0 +1,16 @@
+#!/bin/bash
+#SBATCH --job-name=pi-04-distilbert
+#SBATCH --partition=gpu
+#SBATCH --gres=gpu:1
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=32G
+#SBATCH --time=03:00:00
+#SBATCH --array=0-2
+#SBATCH --output=logs/%x-%A_%a.out
+#SBATCH --error=logs/%x-%A_%a.err
+# One array task per random seed (seeds listed in the config).
+source slurm/common.sh
+SEED=$(python -c "import yaml,sys; print(yaml.safe_load(open('${CONFIG}'))['seeds'][${SLURM_ARRAY_TASK_ID}])")
+python scripts/run_detector.py --config "${CONFIG}" --detector distilbert --seed "${SEED}"

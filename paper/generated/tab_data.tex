@@ -1,0 +1,15 @@
+\begin{tabular}{llrrrr}
+\toprule
+Split & Sources & $N$ & \% inj. & Avg.\ chars & Role \\
+\midrule
+train & \footnotesize deepset, safeguard & 7,354 & 30.5 & 349 & train \\
+val & \footnotesize deepset, safeguard & 1,298 & 30.4 & 339 & calibration \\
+ID test & \footnotesize deepset, safeguard & 2,130 & 32.3 & 343 & ID eval \\
+Noisy benign & \footnotesize synthetic\_noisy\_benign & 600 & 0.0 & 404 & over-defense \\
+NotInject & \footnotesize notinject & 339 & 0.0 & 87 & over-defense \\
+Gandalf+Dolly & \footnotesize dolly, gandalf & 1,985 & 50.3 & 71 & OOD eval \\
+Jailbreak & \footnotesize jailbreak & 935 & 31.9 & 918 & OOD eval \\
+SPML & \footnotesize spml & 3,986 & 78.6 & 606 & OOD eval \\
+Adv. suffix & \footnotesize synthetic\_adv\_suffix & 600 & 50.0 & 388 & stress \\
+\bottomrule
+\end{tabular}

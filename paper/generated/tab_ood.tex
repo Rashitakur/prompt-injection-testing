@@ -1,0 +1,23 @@
+\begin{tabular}{lrrrrrr}
+\toprule
+ & \multicolumn{4}{c}{AUROC $\uparrow$} & \multicolumn{2}{c}{FPR $\downarrow$} \\
+\cmidrule(lr){2-5}\cmidrule(lr){6-7}
+Detector & Gandalf+Dolly & Jailbreak & SPML & Adv. suffix & Noisy benign & NotInject \\
+\midrule
+TF-IDF + LR & 0.997 & 0.978 & 0.957 & 0.999 & \textbf{0.002} & 0.248 \\
+\midrule
+BGE-small + LR & 0.991 & 0.945 & 0.924 & 0.999 & 0.053 & 0.395 \\
+MiniLM-L6 + LR & 0.995 & 0.942 & 0.896 & 0.995 & 0.028 & 0.363 \\
+\midrule
+DistilBERT (FT) & 0.996 & 0.963 & 0.952 & \textbf{1.000} & 0.017 & 0.493 \\
+\midrule
+GPT-2 PPL feats + LR & 0.737 & 0.481 & 0.821 & 0.886 & 0.573 & 0.749 \\
+GPT-2 PPL & 0.741 & 0.407 & 0.779 & 0.904 & 0.738 & 0.519 \\
+GPT-2 win-PPL & 0.744 & 0.795 & 0.969 & 0.985 & 1.000 & 0.847 \\
+\midrule
+Qwen2.5-1.5B judge & 0.994 & 0.921 & 0.982 & 0.986 & 0.117 & 0.136 \\
+Qwen2.5-7B judge & 1.000 & 0.970 & 0.989 & 0.997 & 0.070 & \textbf{0.083} \\
+\midrule
+ProtectAI DeBERTa-v3$^\dagger$ & \textbf{1.000} & \textbf{0.981} & \textbf{0.997} & 0.999 & 0.197 & 0.566 \\
+\bottomrule
+\end{tabular}

@@ -1,0 +1,19 @@
+#!/bin/bash
+#SBATCH --job-name=pi-09-lat-cpu
+#SBATCH --partition=cpu
+#SBATCH --exclusive
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=64G
+#SBATCH --time=04:00:00
+#SBATCH --output=logs/%x-%j.out
+#SBATCH --error=logs/%x-%j.err
+# CPU latency with a fixed thread count (latency.cpu_threads in the config).
+source slurm/common.sh
+export OMP_NUM_THREADS=$(python -c "import yaml; print(yaml.safe_load(open('${CONFIG}'))['latency']['cpu_threads'])")
+export MKL_NUM_THREADS=${OMP_NUM_THREADS}
+export CUDA_VISIBLE_DEVICES=""
+for DET in $(python -c "import sys; sys.path.insert(0,'src'); from pidetect.utils import load_config, enabled_detectors; print(' '.join(enabled_detectors(load_config('${CONFIG}'))))"); do
+  python scripts/benchmark_latency.py --config "${CONFIG}" --detector "${DET}" --device cpu || echo "!! latency failed for ${DET}"
+done

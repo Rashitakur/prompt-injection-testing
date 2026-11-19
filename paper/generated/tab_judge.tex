@@ -1,0 +1,14 @@
+\begin{tabular}{llrrrr}
+\toprule
+Detector & Threshold & ID F1 & ID recall & ID FPR & NotInject FPR \\
+\midrule
+Qwen2.5-1.5B judge & 0.5 (default) & 0.817 & 0.697 & 0.004 & 0.050 \\
+Qwen2.5-1.5B judge & val-calibrated & 0.874 & 0.875 & 0.060 & 0.136 \\
+\addlinespace
+Qwen2.5-7B judge & 0.5 (default) & 0.766 & 0.623 & 0.001 & 0.000 \\
+Qwen2.5-7B judge & val-calibrated & 0.933 & 0.936 & 0.033 & 0.083 \\
+\addlinespace
+ProtectAI DeBERTa-v3$^\dagger$ & 0.5 (default) & 0.886 & 0.798 & 0.001 & 0.434 \\
+ProtectAI DeBERTa-v3$^\dagger$ & val-calibrated & 0.931 & 0.918 & 0.026 & 0.566 \\
+\bottomrule
+\end{tabular}

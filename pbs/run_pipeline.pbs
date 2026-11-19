@@ -1,0 +1,113 @@
+#!/bin/bash
+# =============================================================================
+#  pi-detect — full pipeline as ONE PBS job (this cluster runs PBS, not SLURM).
+#
+#  Submit from the repository root:
+#     qsub pbs/run_pipeline.pbs                 # full run
+#     qsub -v MODE=smoke pbs/run_pipeline.pbs   # ~5-10 min dry run, tiny models
+#
+#  Prerequisites (login node, already done once):
+#     .venv created + requirements installed
+#     python scripts/download_assets.py   (models/datasets cached in HF_HOME)
+#
+#  Resumable: detectors whose artifacts/<det>/seed<k>/ exists are skipped,
+#  so simply re-submit if the job hits walltime. FORCE=1 re-runs everything.
+# =============================================================================
+#PBS -N pi-detect
+#PBS -q gpu
+#PBS -l select=1:ncpus=4:ngpus=1:mem=48gb
+#PBS -l walltime=24:00:00
+#PBS -j oe
+#PBS -o logs/pi-detect.pbs.out
+
+set -uo pipefail
+cd "${PBS_O_WORKDIR:-$(cd "$(dirname "$0")/.." && pwd)}"
+PROJECT_DIR=$PWD
+MODE="${MODE:-full}"
+mkdir -p logs
+LOG="logs/pipeline_${MODE}_${PBS_JOBID:-local}.log"
+exec > >(tee -a "$LOG") 2>&1
+
+# ------------------------------------------------------------------ environment
+source "${PROJECT_DIR}/.venv/bin/activate"
+export PYTHONPATH="${PROJECT_DIR}/src:${PYTHONPATH:-}"
+export PYTHONUNBUFFERED=1 TOKENIZERS_PARALLELISM=false
+export HF_HOME="${HF_HOME:-$HOME/.cache/huggingface}"
+export HF_HUB_OFFLINE=1 HF_DATASETS_OFFLINE=1 TRANSFORMERS_OFFLINE=1   # all assets pre-cached
+export OMP_NUM_THREADS="${NCPUS:-4}" MKL_NUM_THREADS="${NCPUS:-4}"
+
+echo "=== $(date) | job=${PBS_JOBID:-local} | host=$(hostname) | mode=${MODE}"
+nvidia-smi --query-gpu=name,memory.total,driver_version --format=csv,noheader || true
+python -c "import torch,sys; print('python',sys.version.split()[0],'| torch',torch.__version__,'| cuda',torch.cuda.is_available())"
+[ "${ALLOW_CPU:-0}" = "1" ] || python -c "import torch,sys; sys.exit(0 if torch.cuda.is_available() else 1)" \
+  || { echo "!! CUDA not available - aborting (check torch build vs driver)"; exit 1; }
+
+# ------------------------------------------------------------------ dry run
+if [ "$MODE" = "smoke" ]; then
+  bash scripts/run_smoke.sh
+  exit $?
+fi
+
+CONFIG="${CONFIG:-configs/default.yaml}"
+FAILED=()
+cfg() { python -c "import sys; sys.path.insert(0,'src'); from pidetect.utils import load_config; c=load_config('${CONFIG}'); print($1)"; }
+
+step() { echo; echo "################ $(date +%T) $*"; }
+
+run_det() {   # run_det <detector> <seed> [extra args]
+  local det=$1 seed=$2; shift 2
+  if [ "${FORCE:-0}" != "1" ] && [ -d "artifacts/${det}/seed${seed}" ]; then
+    echo "-- skip ${det} seed ${seed} (already done)"; return 0
+  fi
+  step "detector ${det} seed ${seed}"
+  python scripts/run_detector.py --config "$CONFIG" --detector "$det" --seed "$seed" "$@" \
+    || { echo "!! ${det} seed ${seed} FAILED"; FAILED+=("${det}:${seed}"); }
+}
+
+# 1) data
+if [ "${FORCE:-0}" = "1" ] || [ ! -f data/processed/manifest.json ]; then
+  step "prepare data"
+  python scripts/prepare_data.py --config "$CONFIG" || { echo "!! data preparation failed"; exit 1; }
+fi
+
+SEED0=$(cfg "c['seeds'][0]")
+SEEDS=$(cfg "' '.join(map(str,c['seeds']))")
+DETS=$(cfg "' '.join(__import__('pidetect.utils',fromlist=['x']).enabled_detectors(c))")
+echo "enabled detectors: $DETS"
+echo "seeds: $SEEDS"
+
+# 2) detectors (cheap first, LLM judges last)
+for det in $DETS; do
+  case "$det" in
+    tfidf_lr)  run_det "$det" "$SEED0" --device cpu ;;
+    distilbert) for s in $SEEDS; do run_det "$det" "$s"; done ;;
+    judge_*)   : ;;   # later
+    *)         run_det "$det" "$SEED0" ;;
+  esac
+done
+for det in $DETS; do
+  case "$det" in judge_*) run_det "$det" "$SEED0" ;; esac
+done
+
+# 3) latency benchmarks (GPU, then CPU with fixed thread count)
+step "latency GPU"
+for det in $DETS; do
+  python scripts/benchmark_latency.py --config "$CONFIG" --detector "$det" --device cuda \
+    || echo "!! GPU latency failed for $det"
+done
+step "latency CPU"
+CPU_T=$(cfg "c['latency']['cpu_threads']")
+for det in $DETS; do
+  CUDA_VISIBLE_DEVICES="" OMP_NUM_THREADS=$CPU_T MKL_NUM_THREADS=$CPU_T \
+    python scripts/benchmark_latency.py --config "$CONFIG" --detector "$det" --device cpu \
+    || echo "!! CPU latency failed for $det"
+done
+
+# 4) aggregate -> results/findings.md, results/tables, paper/generated, paper/figures
+step "aggregate"
+python scripts/aggregate.py --config "$CONFIG"
+python scripts/check_paper_macros.py paper || echo "Some paper numbers are missing (see list above)"
+
+echo
+echo "=== $(date) finished. Failed detectors: ${FAILED[*]:-none}"
+echo "=== Results: results/findings.md | results/tables | paper/generated | paper/figures"

@@ -1,0 +1,188 @@
+# =============================================================================
+#  Prompt-injection detector benchmark — main configuration
+#  All relative paths are resolved against the repository root.
+# =============================================================================
+paths:
+  root: .
+  data_dir: data            # processed parquet splits land in data/processed
+  results_dir: results      # scores, metrics, latency, tables, figures
+  artifacts_dir: artifacts  # fitted models (tfidf/LR joblib, DistilBERT checkpoints)
+
+seeds: [13, 42, 2024]       # used by stochastic detectors (fine-tuning); others use seeds[0]
+device: auto                # auto | cuda | cpu
+
+# ----------------------------------------------------------------------------- data
+data:
+  max_chars: 4000           # truncate very long inputs (affects <1% of rows)
+  min_chars: 3
+  val_frac: 0.15            # validation carved (stratified) from the in-distribution train pool
+  max_train: null           # optionally cap the train pool (null = no cap)
+  dedup: true               # exact-duplicate removal + train->eval leakage removal
+  # role: id   -> HF split mapped to train or test_id
+  # role: ood  -> every mapped split goes into the held-out set named `test_set`
+  sources:
+    deepset:
+      hf_id: deepset/prompt-injections
+      role: id
+      splits: {train: train, test: test_id}
+      text_cols: [text]
+      label_col: label
+      required: true
+    safeguard:
+      hf_id: xTRam1/safe-guard-prompt-injection
+      role: id
+      splits: {train: train, test: test_id}
+      text_cols: [text]
+      label_col: label
+      required: false
+    spml:
+      hf_id: reshabhs/SPML_Chatbot_Prompt_Injection
+      role: ood
+      test_set: ood_spml
+      splits: {train: ood}
+      text_cols: ["User Prompt", user_prompt, prompt]
+      label_col: ["Prompt injection", prompt_injection, label]
+      max_n: 4000
+    jailbreak:
+      hf_id: jackhhao/jailbreak-classification
+      role: ood
+      test_set: ood_jailbreak
+      splits: {train: ood, test: ood}
+      text_cols: [prompt, text]
+      label_col: type
+      label_map: {jailbreak: 1, benign: 0}
+    gandalf:
+      hf_id: Lakera/gandalf_ignore_instructions
+      role: ood
+      test_set: ood_gandalf_dolly
+      splits: {train: ood, validation: ood, test: ood}
+      text_cols: [text]
+      fixed_label: 1
+    dolly:
+      hf_id: databricks/databricks-dolly-15k
+      role: ood
+      test_set: ood_gandalf_dolly
+      splits: {train: ood}
+      text_cols: [instruction]
+      fixed_label: 0
+      max_n: 1000
+    notinject:             # benign prompts packed with trigger words -> over-defense FPR
+      hf_id: leolee99/NotInject
+      role: ood
+      test_set: benign_notinject
+      splits: {NotInject_one: ood, NotInject_two: ood, NotInject_three: ood}
+      text_cols: [prompt, text, sentence]
+      fixed_label: 0
+  # Synthetic stress tests derived from test_id (deterministic, seed = seeds[0])
+  synthetic:
+    adv_suffix:            # injections + random-token "GCG-style" suffix; clean benign negatives
+      enabled: true
+      n_suffix_tokens: 20
+      max_n: 600
+    noisy_benign:          # benign prompts + base64 / hex / URLs / code noise -> FPR stress
+      enabled: true
+      max_n: 600
+
+# ----------------------------------------------------------------------------- detectors
+# Each key is a detector name; `type` selects the implementation.
+# Variants produced by one detector are named "<name>" or "<name>-<suffix>".
+detectors:
+  tfidf_lr:
+    type: tfidf_lr
+    c_grid: [0.1, 0.3, 1, 3, 10, 30]
+    max_features: 200000
+    seeded: false
+
+  emb_minilm_lr:
+    type: embed_lr
+    model: sentence-transformers/all-MiniLM-L6-v2
+    pooling: mean
+    normalize: true
+    max_len: 256
+    batch_size: 128
+    c_grid: [0.01, 0.1, 1, 10, 100]
+    seeded: false
+
+  emb_bge_lr:
+    type: embed_lr
+    model: BAAI/bge-small-en-v1.5
+    pooling: cls
+    normalize: true
+    max_len: 512
+    batch_size: 128
+    c_grid: [0.01, 0.1, 1, 10, 100]
+    seeded: false
+
+  distilbert:
+    type: finetune
+    model: distilbert/distilbert-base-uncased
+    max_len: 256
+    epochs: 3
+    lr: 3.0e-5
+    weight_decay: 0.01
+    warmup_ratio: 0.1
+    batch_size: 32
+    eval_batch_size: 128
+    dtype: auto            # mixed precision on GPU
+    select_metric: auroc   # best epoch chosen on validation
+    seeded: true
+
+  ppl_gpt2:
+    type: perplexity
+    model: openai-community/gpt2
+    max_len: 1024
+    window: 16             # windowed perplexity (Jain et al., 2023)
+    batch_size: 32
+    dtype: fp32
+    seeded: false
+
+  judge_qwen1p5b:
+    type: llm_judge
+    model: Qwen/Qwen2.5-1.5B-Instruct
+    max_text_tokens: 1024
+    batch_size: 32
+    dtype: bf16
+    seeded: false
+
+  judge_qwen7b:
+    type: llm_judge
+    model: Qwen/Qwen2.5-7B-Instruct
+    max_text_tokens: 1024
+    batch_size: 16
+    dtype: bf16
+    seeded: false
+
+  judge_llama8b:           # gated on HF: accept the licence, then set enabled: true
+    type: llm_judge
+    model: meta-llama/Llama-3.1-8B-Instruct
+    max_text_tokens: 1024
+    batch_size: 16
+    dtype: bf16
+    enabled: false
+    seeded: false
+
+  ref_protectai:           # off-the-shelf reference; may overlap with public training data
+    type: hf_classifier
+    model: protectai/deberta-v3-base-prompt-injection-v2
+    positive_label: INJECTION
+    max_len: 512
+    batch_size: 64
+    seeded: false
+
+# ----------------------------------------------------------------------------- evaluation
+eval:
+  threshold_rule: max_f1        # threshold picked on validation: max_f1 | youden | fpr@0.01
+  bootstrap: 1000               # resamples for 95% CIs
+  low_fpr: 0.01                 # report TPR at this FPR
+  cascade:                      # cheap detector + escalation of uncertain inputs to an LLM judge
+    cheap: distilbert
+    expensive: judge_qwen7b
+    fractions: [0.0, 0.05, 0.1, 0.2, 0.3, 1.0]   # share of val inputs (closest to threshold) escalated
+
+latency:
+  n_samples: 300                # texts sampled (fixed seed) from test_id
+  warmup: 10
+  batch_sizes: [1, 32]
+  cpu_threads: 4
+  cpu_skip: [judge_qwen7b, judge_llama8b]   # too slow to be meaningful on CPU
+  cpu_n_samples_slow: 30                     # reduced sample for slow detectors on CPU

@@ -1,0 +1,19 @@
+# Install torch matching your cluster's CUDA first if needed, e.g.:
+#   pip install torch --index-url https://download.pytorch.org/whl/cu121
+torch>=2.3
+transformers>=4.44
+tokenizers>=0.19
+datasets>=2.19
+huggingface_hub>=0.23
+accelerate>=0.30
+sentencepiece>=0.2      # DeBERTa-v3 tokenizer (reference detector)
+protobuf>=4.25
+scikit-learn>=1.3
+scipy>=1.10
+numpy>=1.24
+pandas>=2.0
+pyarrow>=14
+pyyaml>=6.0
+joblib>=1.3
+matplotlib>=3.8
+pytest>=8.0

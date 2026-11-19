@@ -1,0 +1,18 @@
+#!/bin/bash
+#SBATCH --job-name=pi-08-lat-gpu
+#SBATCH --partition=gpu
+#SBATCH --gres=gpu:1
+#SBATCH --exclusive
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=64G
+#SBATCH --time=03:00:00
+#SBATCH --output=logs/%x-%j.out
+#SBATCH --error=logs/%x-%j.err
+# Exclusive node so co-located jobs do not distort timings. All detectors run
+# sequentially on the SAME GPU for a fair comparison.
+source slurm/common.sh
+for DET in $(python -c "import sys; sys.path.insert(0,'src'); from pidetect.utils import load_config, enabled_detectors; print(' '.join(enabled_detectors(load_config('${CONFIG}'))))"); do
+  python scripts/benchmark_latency.py --config "${CONFIG}" --detector "${DET}" --device cuda || echo "!! latency failed for ${DET}"
+done

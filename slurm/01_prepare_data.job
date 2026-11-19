@@ -1,0 +1,12 @@
+#!/bin/bash
+#SBATCH --job-name=pi-01-data
+#SBATCH --partition=cpu
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=16G
+#SBATCH --time=00:30:00
+#SBATCH --output=logs/%x-%j.out
+#SBATCH --error=logs/%x-%j.err
+source slurm/common.sh
+python scripts/prepare_data.py --config "${CONFIG}"

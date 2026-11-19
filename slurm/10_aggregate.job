@@ -1,0 +1,19 @@
+#!/bin/bash
+#SBATCH --job-name=pi-10-aggregate
+#SBATCH --partition=cpu
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=16G
+#SBATCH --time=00:30:00
+#SBATCH --output=logs/%x-%j.out
+#SBATCH --error=logs/%x-%j.err
+source slurm/common.sh
+python scripts/aggregate.py --config "${CONFIG}"
+python scripts/check_paper_macros.py paper || echo "Some paper numbers are missing (red ?? in the PDF): see list above"
+# Build the paper if LaTeX is available (module load texlive on some clusters)
+if command -v latexmk >/dev/null 2>&1; then
+  (cd paper && latexmk -pdf -interaction=nonstopmode main.tex >/dev/null && echo "paper -> paper/main.pdf") || echo "LaTeX build failed; see paper/main.log"
+else
+  echo "latexmk not found: compile paper/ locally or on Overleaf"
+fi

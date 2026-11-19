@@ -1,0 +1,17 @@
+#!/bin/bash
+#SBATCH --job-name=pi-06-judge
+#SBATCH --partition=gpu
+#SBATCH --gres=gpu:1
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=64G
+#SBATCH --time=08:00:00
+#SBATCH --array=0-1
+#SBATCH --output=logs/%x-%A_%a.out
+#SBATCH --error=logs/%x-%A_%a.err
+# 7B/8B judges in bf16 need ~16 GB weights + activations: use a >=40 GB GPU (A100/H100/L40S),
+# or lower batch_size in the config. To add Llama-3.1-8B: enable it in the config and use --array=0-2.
+source slurm/common.sh
+DETS=(judge_qwen1p5b judge_qwen7b judge_llama8b)
+python scripts/run_detector.py --config "${CONFIG}" --detector "${DETS[$SLURM_ARRAY_TASK_ID]}"
