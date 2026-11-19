@@ -1,0 +1,37 @@
+{
+  "detector": "tfidf_lr",
+  "device": "cpu",
+  "n": 300,
+  "env": {
+    "python": "3.11.15",
+    "host": "jiit-gpu01",
+    "machine": "x86_64",
+    "torch": "2.7.1+cu118",
+    "cuda_available": false,
+    "cpu_threads": 4,
+    "transformers": "5.23.0",
+    "slurm_job_id": null,
+    "cpu_model": "Intel(R) Xeon(R) Platinum 8468"
+  },
+  "n_params": 140072,
+  "batch": {
+    "1": {
+      "calls": 300,
+      "ms_per_call_mean": 1.5973863005638123,
+      "ms_per_call_p50": 1.2779971584677696,
+      "ms_per_call_p95": 3.5339388065040134,
+      "ms_per_call_p99": 6.629866920411587,
+      "ms_per_sample": 1.5973863005638123,
+      "throughput_per_s": 626.0226468995263
+    },
+    "32": {
+      "calls": 10,
+      "ms_per_call_mean": 16.28145407885313,
+      "ms_per_call_p50": 17.091221176087856,
+      "ms_per_call_p95": 21.548372134566307,
+      "ms_per_call_p99": 21.98734514415264,
+      "ms_per_sample": 0.542715135961771,
+      "throughput_per_s": 1842.5872686005946
+    }
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "detector": "distilbert",
+  "device": "cpu",
+  "n": 300,
+  "env": {
+    "python": "3.11.15",
+    "host": "jiit-gpu01",
+    "machine": "x86_64",
+    "torch": "2.7.1+cu118",
+    "cuda_available": false,
+    "cpu_threads": 4,
+    "transformers": "5.23.0",
+    "slurm_job_id": null,
+    "cpu_model": "Intel(R) Xeon(R) Platinum 8468"
+  },
+  "n_params": 66955010,
+  "batch": {
+    "1": {
+      "calls": 300,
+      "ms_per_call_mean": 24.90052554135521,
+      "ms_per_call_p50": 18.066486343741417,
+      "ms_per_call_p95": 68.4260037727654,
+      "ms_per_call_p99": 71.31671631708741,
+      "ms_per_sample": 24.90052554135521,
+      "throughput_per_s": 40.15979495449536
+    },
+    "32": {
+      "calls": 10,
+      "ms_per_call_mean": 1659.468861669302,
+      "ms_per_call_p50": 1769.6414301171899,
+      "ms_per_call_p95": 1788.5769717395306,
+      "ms_per_call_p99": 1790.1778616011143,
+      "ms_per_sample": 55.315628722310066,
+      "throughput_per_s": 18.07807346853272
+    }
+  }
+}

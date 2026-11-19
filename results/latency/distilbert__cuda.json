@@ -1,0 +1,40 @@
+{
+  "detector": "distilbert",
+  "device": "cuda",
+  "n": 300,
+  "env": {
+    "python": "3.11.15",
+    "host": "jiit-gpu01",
+    "machine": "x86_64",
+    "torch": "2.7.1+cu118",
+    "cuda_available": true,
+    "gpu": "NVIDIA A100-SXM4-80GB",
+    "cuda": "11.8",
+    "cpu_threads": 4,
+    "transformers": "5.23.0",
+    "slurm_job_id": null,
+    "cpu_model": "Intel(R) Xeon(R) Platinum 8468"
+  },
+  "n_params": 66955010,
+  "batch": {
+    "1": {
+      "calls": 300,
+      "ms_per_call_mean": 14.891056884080172,
+      "ms_per_call_p50": 15.711151994764805,
+      "ms_per_call_p95": 20.86680782958865,
+      "ms_per_call_p99": 23.031284306198355,
+      "ms_per_sample": 14.891056884080172,
+      "throughput_per_s": 67.15440064358941
+    },
+    "32": {
+      "calls": 10,
+      "ms_per_call_mean": 42.568167112767696,
+      "ms_per_call_p50": 34.673779271543026,
+      "ms_per_call_p95": 72.85334272310132,
+      "ms_per_call_p99": 90.38139155134559,
+      "ms_per_sample": 1.4189389037589233,
+      "throughput_per_s": 704.75197864467
+    }
+  },
+  "peak_mem_gb": 0.545207296
+}

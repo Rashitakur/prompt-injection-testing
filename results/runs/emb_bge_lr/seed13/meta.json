@@ -1,0 +1,73 @@
+{
+  "variant": "emb_bge_lr",
+  "detector": "emb_bge_lr",
+  "type": "embed_lr",
+  "seed": 13,
+  "model": "BAAI/bge-small-en-v1.5",
+  "threshold": 0.45364615321159363,
+  "threshold_rule": "max_f1",
+  "default_threshold": null,
+  "fit_seconds": 28.27429710328579,
+  "score_timings": {
+    "test_id": {
+      "seconds": 3.8325072284787893,
+      "n": 2130,
+      "ms_per_sample": 1.799299168299901
+    },
+    "benign_noisy": {
+      "seconds": 1.797042677178979,
+      "n": 600,
+      "ms_per_sample": 2.9950711286316314
+    },
+    "benign_notinject": {
+      "seconds": 0.3073462285101414,
+      "n": 339,
+      "ms_per_sample": 0.9066260428027769
+    },
+    "ood_gandalf_dolly": {
+      "seconds": 1.9962415732443333,
+      "n": 1985,
+      "ms_per_sample": 1.0056632610802687
+    },
+    "ood_jailbreak": {
+      "seconds": 3.8440479673445225,
+      "n": 935,
+      "ms_per_sample": 4.111281248496815
+    },
+    "ood_spml": {
+      "seconds": 8.763768641278148,
+      "n": 3986,
+      "ms_per_sample": 2.198637391188697
+    },
+    "stress_adv_suffix": {
+      "seconds": 1.7040073089301586,
+      "n": 600,
+      "ms_per_sample": 2.8400121815502644
+    }
+  },
+  "n_params": 33360385,
+  "device": "cuda",
+  "env": {
+    "python": "3.11.15",
+    "host": "jiit-gpu01",
+    "machine": "x86_64",
+    "torch": "2.7.1+cu118",
+    "cuda_available": true,
+    "gpu": "NVIDIA A100-SXM4-80GB",
+    "cuda": "11.8",
+    "cpu_threads": 4,
+    "transformers": "5.23.0",
+    "slurm_job_id": null,
+    "cpu_model": "Intel(R) Xeon(R) Platinum 8468"
+  },
+  "train_n": 7354,
+  "val_n": 1298,
+  "history": null,
+  "c_curve": {
+    "0.01": 0.9816813154464024,
+    "0.1": 0.9890014999229011,
+    "1": 0.9942610426566859,
+    "10": 0.9956852685142352,
+    "100": 0.9958002158767539
+  }
+}

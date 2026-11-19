@@ -1,0 +1,86 @@
+{
+  "variant": "distilbert",
+  "detector": "distilbert",
+  "type": "finetune",
+  "seed": 13,
+  "model": "distilbert/distilbert-base-uncased",
+  "threshold": 0.4573790729045868,
+  "threshold_rule": "max_f1",
+  "default_threshold": null,
+  "fit_seconds": 107.02707908116281,
+  "score_timings": {
+    "test_id": {
+      "seconds": 1.1801290344446898,
+      "n": 2130,
+      "ms_per_sample": 0.554051189880136
+    },
+    "benign_noisy": {
+      "seconds": 0.48561175912618637,
+      "n": 600,
+      "ms_per_sample": 0.8093529318769773
+    },
+    "benign_notinject": {
+      "seconds": 0.1234650481492281,
+      "n": 339,
+      "ms_per_sample": 0.36420368185613006
+    },
+    "ood_gandalf_dolly": {
+      "seconds": 0.6784673389047384,
+      "n": 1985,
+      "ms_per_sample": 0.3417971480628405
+    },
+    "ood_jailbreak": {
+      "seconds": 0.9459124840795994,
+      "n": 935,
+      "ms_per_sample": 1.0116711059674859
+    },
+    "ood_spml": {
+      "seconds": 2.9243040028959513,
+      "n": 3986,
+      "ms_per_sample": 0.7336437538625066
+    },
+    "stress_adv_suffix": {
+      "seconds": 0.44090828485786915,
+      "n": 600,
+      "ms_per_sample": 0.7348471414297819
+    }
+  },
+  "n_params": 66955010,
+  "device": "cuda",
+  "env": {
+    "python": "3.11.15",
+    "host": "jiit-gpu01",
+    "machine": "x86_64",
+    "torch": "2.7.1+cu118",
+    "cuda_available": true,
+    "gpu": "NVIDIA A100-SXM4-80GB",
+    "cuda": "11.8",
+    "cpu_threads": 4,
+    "transformers": "5.23.0",
+    "slurm_job_id": null,
+    "cpu_model": "Intel(R) Xeon(R) Platinum 8468"
+  },
+  "train_n": 7354,
+  "val_n": 1298,
+  "history": [
+    {
+      "epoch": 1,
+      "train_loss": 0.1735651449442072,
+      "val_auroc": 0.9977010527496251,
+      "val_auprc": 0.9959028862865955
+    },
+    {
+      "epoch": 2,
+      "train_loss": 0.024908215720611422,
+      "val_auroc": 0.9984285854465424,
+      "val_auprc": 0.9971495333494881
+    },
+    {
+      "epoch": 3,
+      "train_loss": 0.00739928387540757,
+      "val_auroc": 0.9988421155921892,
+      "val_auprc": 0.9980704863731613
+    }
+  ],
+  "c_curve": null
+}
